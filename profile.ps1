@@ -1,0 +1,264 @@
+$allSystemSoftware = Get-ItemProperty HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\* 
+$notfoundinAD = "ERROR! user NOT Found in Active Directory"
+$notValidorNotAllowed = "ERROR! credentials entered denied or invalid"
+$noValue = "No value entered"
+start-transcript
+$repos = Join-Path -Path $env:USERPROFILE -ChildPath '\repos'
+
+Set-Location -Path $repos
+
+function resourceCalendar ($calendar) {
+    return $calendar + ':\calendar'
+}
+
+function JoinDomain {
+ 
+    param
+    (
+        [String] $hostname,  
+        [String] $path,
+        [switch] $flag
+    )
+    Clear-Host
+    #$mycred = $host.ui.PromptForCredential("Authorization Prompt", "Please enter your admin account and password to complete this action",$admin,"")
+    Write-Host "$hostname and ghost $domain and $path and $flag"
+    #Add-Computer -DomainName $domain -ComputerName $hostname -Confirm:false -Credential $mycred -OUPath $path -Restart:$flag
+
+}
+
+function connect2Exchange {
+
+    $O365user = $host.ui.PromptForCredential("Authorization Prompt", "Please enter your Office 365 user and password to complete this action",$admin,"")
+    $Session = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri https://outlook.office365.com/powershell-liveid/ -Credential $O365user -Authentication Basic -AllowRedirection
+    Import-PSSession $Session
+}
+
+function isLockedOut ($user)
+{
+    Clear-Host
+    Try
+    {
+        $flag = Get-ADUser -Identity $user -Properties * | Select-Object LockedOut
+        return $flag.LockedOut
+    }
+    Catch [Microsoft.ActiveDirectory.Management.ADIdentityResolutionException]
+    {
+        Write-Host $notfoundinAD -ForegroundColor Red
+    }
+
+}
+
+function userExists ($user)
+{
+Try{
+    $user = Get-ADUser -Filter { sAMAccountName -eq $user }
+    If ($null -ne $user) {
+      return $true
+    }
+    Else {
+      return $false
+    }
+}
+  Catch [Microsoft.ActiveDirectory.Management.ADIdentityResolutionException] 
+{
+    Write-Host $notfoundinAD -ForegroundColor Red
+}
+
+
+}
+
+function isPasswordExpired ($user)
+{
+    Clear-Host
+    Try
+    {
+        $flag = Get-ADUser -Identity $user -Properties * | Select-Object PasswordExpired
+        return $flag.PasswordExpired
+    }
+    Catch [Microsoft.ActiveDirectory.Management.ADIdentityResolutionException]
+    {
+        Write-Host $notfoundinAD -ForegroundColor Red
+    }
+
+}
+
+function isEnabled ($user)
+{
+    Clear-Host
+    Try
+    {
+        $flag = Get-ADUser -Identity $user -Properties * | Select-Object Enabled
+        return $flag.Enabled
+    }
+    Catch [Microsoft.ActiveDirectory.Management.ADIdentityResolutionException]
+    {
+        Write-Host $notfoundinAD -ForegroundColor Red
+    }
+
+}
+
+function Enable($user)
+{
+    Clear-Host
+    Try
+    {
+        $account = Get-ADUser -Identity $user -Properties * 
+        If ($account.Enabled -eq $true)
+        {
+            Write-Host "User is already enabled!" -ForegroundColor Yellow
+        }
+        else
+        {
+            $mycred = $host.ui.PromptForCredential("Authorization Prompt", "Please enter your admin account and password to complete this action",$admin,"")
+            if ($null -eq $mycred.Password)
+            {
+                Write-Host $noValue -ForegroundColor Yellow
+            }
+            else
+            {
+                Enable-ADAccount -Identity $user -Credential $mycred
+                Write-Host "$($account.Givenname)'s account enabled!" -ForegroundColor Green
+            }   
+        }
+    }
+    Catch [Microsoft.ActiveDirectory.Management.ADIdentityResolutionException]
+    {
+        Write-Host $notfoundinAD -ForegroundColor Red
+    }
+    Catch [System.Security.Authentication.AuthenticationException]
+    {
+        Write-Host $notValidorNotAllowed -ForegroundColor Red
+    }
+
+}
+
+function Disable($user)
+{
+    Clear-Host
+    Try
+    {
+        $account = Get-ADUser -Identity $user -Properties *
+        If ($account.Enabled -eq $false)
+        {
+            Write-Host "User is already disabled!" -ForegroundColor Yellow
+        }
+        else
+        {
+            $mycred = $host.ui.PromptForCredential("Authorization Prompt", "Please enter your admin account and password to complete this action",$admin, "")
+            if ($null -eq $mycred.Password)
+            {
+                Write-Host $noValue -ForegroundColor Yellow
+            }
+            else
+            {
+                Disable-ADAccount -Identity $user -Credential $mycred
+                Write-Host "$($account.Givenname)'s account Disabled!" -ForegroundColor Green
+            }
+            
+        } 
+    }
+    Catch [Microsoft.ActiveDirectory.Management.ADIdentityResolutionException]
+    {
+        Write-Host $notfoundinAD -ForegroundColor Red
+    }
+    Catch [System.Security.Authentication.AuthenticationException]
+    {
+        Write-Host $notValidorNotAllowed -ForegroundColor Red
+    }
+
+}
+
+function ResetPassword ($user) {
+
+    Clear-Host
+    Try
+    {
+        $mycred = $host.ui.PromptForCredential("Authorization Prompt", "Please enter your admin account and password to complete this action",$admin, "")
+        $account = Get-ADUser -Identity $user -Properties *
+        $newpass = Read-Host -AsSecureString -Prompt "Please enter a strong password"
+        if ($null -eq $mycred.Password)
+        {
+            Write-Host $noValue -ForegroundColor Yellow
+        }
+        else
+        {
+            Set-ADAccountPassword -Identity $user -Reset -NewPassword $newpass -Credential $mycred
+            Write-Host "$($account.Givenname)'s password has been changed!" -ForegroundColor Green
+        }
+        
+    }
+    Catch [Microsoft.ActiveDirectory.Management.ADIdentityResolutionException]
+    {
+        Write-Host $notfoundinAD -ForegroundColor Red
+    }
+    Catch [Microsoft.ActiveDirectory.Management.ADPasswordComplexityException]
+    {
+        Write-Host "ERROR! password does not meet complexity requirements!" -ForegroundColor Red
+    }
+    Catch [Microsoft.ActiveDirectory.Management.ADInvalidPasswordException]
+    {
+        Write-Host "ERROR! password is invalid" -ForegroundColor Red
+    }
+    Catch [System.Security.Authentication.AuthenticationException]
+    {
+        Write-Host $notValidorNotAllowed -ForegroundColor Red
+    }
+}
+
+function Unlock ($user)
+{
+    Clear-Host
+    Try
+    {
+        $account = Get-ADUser -Identity $user -Properties *
+        If ($account.LockedOut -eq $false)
+        {
+            $name = $account.GivenName
+            Write-Host "$name's account is already unlocked!" -ForegroundColor Yellow
+        }
+        else
+        {
+            $mycred = $host.ui.PromptForCredential("Admin Prompt", "Please enter your admin account and password to complete this action",$admin,"")
+            if ($null -eq $mycred.Password)
+            {
+                Write-Host $noValue -ForegroundColor Yellow
+            }
+            else
+            {
+                Unlock-ADAccount -Identity $user -Credential $mycred
+                Write-Host "$($account.Givenname)'s account unlocked!" -ForegroundColor Green
+            }
+        }
+    }
+    Catch [Microsoft.ActiveDirectory.Management.ADIdentityResolutionException]
+    {
+        Write-Host $notfoundinAD -ForegroundColor Red
+    }
+    Catch [System.Security.Authentication.AuthenticationException]
+    {
+        Write-Host $notValidorNotAllowed -ForegroundColor Red
+    }
+}
+
+function generateComplexPassword($length)
+{
+    $digits = 48..57
+    $uppercase = 65..90
+    $lowercase = 97..122
+    $special = 33..42
+    $password = $null
+    $atLeastOneUpperCase = "[A-Z]+"
+    $atLeastOneLowerCase = "[a-z]+"
+    $atLeastOneNumber = "[0-9]+"
+    $match = $atLeastOneUpperCase + $atLeastOneLowerCase  + $atLeastOneNumber -join ""
+
+    $combined = ([char[]]$digits) + ([char[]]$uppercase) + ([char[]]$lowercase) + ([char[]]$special)
+
+    do 
+    {
+        $password = (Get-Random -Count $length -InputObject([char[]]$combined)) -join ""
+    }
+    until ($password -match $match) #Loops until string has at least one uppercase, lowercase and number
+
+    return $password
+}
