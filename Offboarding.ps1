@@ -6,9 +6,9 @@ Purpose: Locate users whose accounts have expired but are NOT Permanently Disabl
 
 #>
 
-Set-Variable -name 'recipient' -option Constant -scope global -value 'itsupport@nbrem.no'
-Set-Variable -name 'send' -option Constant -scope global -value 'noreply@nbrem.no'
-Set-Variable -name 'SMTP' -option Constant -scope global -value 'relay.nbrem.no'
+Set-Variable -name 'recipient' -option Constant -scope global -value 'itsupport@contoso.com'
+Set-Variable -name 'send' -option Constant -scope global -value 'noreply@contoso.com'
+Set-Variable -name 'SMTP' -option Constant -scope global -value 'relay.contoso.com'
 $ErrorActionPreference = Stop
 $date = Get-Date
 $primaryGroup = "_PermanentlyDisabledUsers"
