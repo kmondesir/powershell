@@ -62,7 +62,7 @@ Function new-message(){
   catch {
     $ErrorMessage = $_.Exception.Message
     $FailedItem = $_.Exception.ItemName
-    Write-Host $ErrorMessage $FailedItem | Out-File .\$date-errors.log
+    Write-Output $ErrorMessage $FailedItem | Tee-Object -FilePath .\$date-errors.log
   }
   finally{
     $recipient = $null
