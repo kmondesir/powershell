@@ -60,7 +60,9 @@ Function new-message(){
     $Mail.Send()
   }
   catch {
- 
+    $ErrorMessage = $_.Exception.Message
+    $FailedItem = $_.Exception.ItemName
+    Write-Host $ErrorMessage $FailedItem | Out-File .\$date-errors.log
   }
   finally{
     $recipient = $null
