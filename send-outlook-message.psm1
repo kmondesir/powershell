@@ -37,10 +37,10 @@ Function new-message(){
 [CmdletBinding()]
   Param(
     [Parameter(HelpMessage = "Recipient(s) added to the mail message. To include multiple email address please use ; as a separator.", Position = 0, Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
-    [string] $recipient = 'morel.kevin@gmail.com',
+    [string[]] $recipient = 'morel.kevin@gmail.com',
  
     [Parameter(HelpMessage = "Additional addresses to be added to the mail message, use ; as a separator.", Position = 1, Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
-    [string] $carbonCopy,
+    [string[]] $carbonCopy,
  
     [Parameter(HelpMessage = "If subject is not included a default string will include a timestamp", Position = 2, Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
     [string] $subject = ('Message sent at' + ' ' + (Get-Date -Format 'yyyy-MM-dd HH:mm:ss')),
