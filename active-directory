@@ -1,4 +1,4 @@
-$allSystemSoftware = Get-ItemProperty HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\* 
+
 $notfoundinAD = "ERROR! user NOT Found in Active Directory"
 $notValidorNotAllowed = "ERROR! credentials entered denied or invalid"
 $noValue = "No value entered"
@@ -6,6 +6,10 @@ start-transcript
 $repos = Join-Path -Path $env:USERPROFILE -ChildPath '\repos'
 
 Set-Location -Path $repos
+
+function get-software {
+	return Get-ItemProperty HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\* 
+}
 
 function resourceCalendar ($calendar) {
     return $calendar + ':\calendar'
@@ -238,27 +242,4 @@ function Unlock ($user)
     {
         Write-Host $notValidorNotAllowed -ForegroundColor Red
     }
-}
-
-function generateComplexPassword($length)
-{
-    $digits = 48..57
-    $uppercase = 65..90
-    $lowercase = 97..122
-    $special = 33..42
-    $password = $null
-    $atLeastOneUpperCase = "[A-Z]+"
-    $atLeastOneLowerCase = "[a-z]+"
-    $atLeastOneNumber = "[0-9]+"
-    $match = $atLeastOneUpperCase + $atLeastOneLowerCase  + $atLeastOneNumber -join ""
-
-    $combined = ([char[]]$digits) + ([char[]]$uppercase) + ([char[]]$lowercase) + ([char[]]$special)
-
-    do 
-    {
-        $password = (Get-Random -Count $length -InputObject([char[]]$combined)) -join ""
-    }
-    until ($password -match $match) #Loops until string has at least one uppercase, lowercase and number
-
-    return $password
 }
