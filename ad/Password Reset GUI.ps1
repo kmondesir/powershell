@@ -101,7 +101,7 @@ function changePassword($length)
     Set-Clipboard -Value $password
     $txtPassword.text = $password
     
-    $from = 'IT Support <itsupport@nbrem.no'
+    $from = 'IT Support <itsupport@contoso.com'
     $to = '$global:user.Name $global:user.UserPrincipalName'
     $cc = '$env:username' + '@' + '$env:USERDNSDOMAIN'
     $subject = 'Password Reset Request has come in'
