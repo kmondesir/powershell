@@ -38,11 +38,11 @@
     [Alias("Current")]
     [string] $Source,
 
-    [Parameter(HelpMessage = "Name of the cabinet file including .ISO extension.", Position = 1, Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
+    [Parameter(HelpMessage = "Directory to put the file.", Position = 1, Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
     [Alias("Path")]
     [string] $Destination = $(Join-Path -Path $env:userprofile -ChildPath "Desktop"),
 
-    [Parameter(HelpMessage = "Name of the cabinet file including .ISO extension.", Position = 2, Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
+    [Parameter(HelpMessage = "Name of resulting file.", Position = 2, Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
     [Alias("Title")]
     [string] $Name = (Get-Date).ToString("yyyyMMdd-HHmmss.ffff") + ".iso",
 
@@ -50,7 +50,8 @@
     [ValidateSet('CDR','CDRW','DVDRAM','DVDPLUSR','DVDPLUSRW','DVDPLUSR_DUALLAYER','DVDDASHR','DVDDASHRW','DVDDASHR_DUALLAYER','DISK','DVDPLUSRW_DUALLAYER','BDR','BDRE')][string] $Media = 'DVDPLUSRW_DUALLAYER', 
     [string] $Title = (Get-Date).ToString("yyyyMMdd-HHmmss.ffff"),  
     [switch] $Force, 
-    [parameter(ParameterSetName='Clipboard')][switch]$FromClipboard 
+    [parameter(ParameterSetName='Clipboard')]
+    [switch] $FromClipboard 
   ) 
 function New-IsoFile  
 {  
