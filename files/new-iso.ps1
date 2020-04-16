@@ -33,29 +33,30 @@
 
 [CmdletBinding()]
   Param( 
-    [Parameter(HelpMessage = "Items to include in iso file.", Position = 0, Mandatory = $true, ValueFromPipeline = $true)]
+    [Parameter(HelpMessage = "Items to include in iso file.", Position = 0, Mandatory = $true, ValueFromPipeline = $true, ParameterSetName = 'Source')]
     [ValidateNotNullOrEmpty()]
-    [Alias("Current")]
+    [Alias("S")]
     [string] $Source,
 
-    [Parameter(HelpMessage = "Directory to put the file.", Position = 1, Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
-    [Alias("Path")]
-    [string] $Destination = $(Join-Path -Path $env:userprofile -ChildPath "Desktop"),
+    [Parameter(HelpMessage = "Directory to put the file.", Position = 2, Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
+    [Alias("D")]
+    [string] $Destination = $(Get-Location),
 
-    [Parameter(HelpMessage = "Name of resulting file.", Position = 2, Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
-    [Alias("Title")]
-    [string] $Name = (Get-Date).ToString("yyyyMMdd-HHmmss.ffff") + ".iso",
+    [Parameter(HelpMessage = "Name of resulting file.", Position = 1, Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
+    [Alias("T")]
+    [string] $Name = $(Get-Date).ToString("yyyyMMdd-HHmmss.ffff") + ".iso",
 
     [ValidateScript({Test-Path -LiteralPath $_ -PathType Leaf})][string]$BootFile = $null, 
     [ValidateSet('CDR','CDRW','DVDRAM','DVDPLUSR','DVDPLUSRW','DVDPLUSR_DUALLAYER','DVDDASHR','DVDDASHRW','DVDDASHR_DUALLAYER','DISK','DVDPLUSRW_DUALLAYER','BDR','BDRE')][string] $Media = 'DVDPLUSRW_DUALLAYER', 
-    [string] $Title = (Get-Date).ToString("yyyyMMdd-HHmmss.ffff"),  
+    [string] $Title = $(Get-Date).ToString("yyyyMMdd-HHmmss.ffff"),  
     [switch] $Force, 
     [parameter(ParameterSetName='Clipboard')]
     [switch] $FromClipboard 
   ) 
-function New-IsoFile  
-{  
-  Begin {  
+function create-iso  
+{ 
+  Begin 
+  {  
     ($cp = new-object System.CodeDom.Compiler.CompilerParameters).CompilerOptions = '/unsafe' 
     if (!('ISOFile' -as [type])) {  
       Add-Type -CompilerParameters $cp -TypeDefinition @' 
@@ -95,17 +96,18 @@ public class ISOFile
     if (!($Target = New-Item -Path $(Join-Path -Path $Destination -ChildPath $Name) -ItemType File -Force:$Force -ErrorAction SilentlyContinue)) { Write-Error -Message "Cannot create file $Path. Use -Force parameter to overwrite if the target file already exists."; break } 
   }  
  
-  Process { 
+  Process 
+  { 
     if($FromClipboard) { 
       if($PSVersionTable.PSVersion.Major -lt 5) { Write-Error -Message 'The -FromClipboard parameter is only supported on PowerShell v5 or higher'; break } 
       $Source = Get-Clipboard -Format FileDropList 
     } 
- 
-    foreach($item in $Source) { 
+
+    foreach ($item in Get-ChildItem -Path $Source) { 
       if($item -isnot [System.IO.FileInfo] -and $item -isnot [System.IO.DirectoryInfo]) { 
         $item = Get-Item -LiteralPath $item 
       } 
- 
+
       if($item) { 
         Write-Verbose -Message "Adding item to the target image: $($item.FullName)" 
         try { $Image.Root.AddTree($item.FullName, $true) } catch { Write-Error -Message ($_.Exception.Message.Trim() + ' Try a different media type.') } 
@@ -113,11 +115,13 @@ public class ISOFile
     } 
   } 
  
-  End {  
+  End 
+  {  
     if ($Boot) { $Image.BootImageOptions=$Boot }  
     $Result = $Image.CreateResultImage()  
     [ISOFile]::Create($Target.FullName,$Result.ImageStream,$Result.BlockSize,$Result.TotalBlocks) 
     Write-Verbose -Message "Target image ($($Target.FullName)) has been created" 
     $Target 
   } 
-} 
+}
+create-iso
