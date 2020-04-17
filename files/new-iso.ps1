@@ -19,7 +19,7 @@
   and attempting to resolve all ambiguous file references.
 
 .EXAMPLE
-  New-IsoFile "c:\tools","c:Downloads\utils"  
+  create-iso -Source c:\Windows\Temp
   This command creates a .iso file in $env:temp folder (default location) that contains c:\tools and c:\downloads\utils folders.
   The folders themselves are included at the root of the .iso image.  
 
