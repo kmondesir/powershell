@@ -53,7 +53,7 @@
     [parameter(ParameterSetName='Clipboard')]
     [switch] $FromClipboard 
   ) 
-invoke-command -ScriptBlock 
+function make
 { 
   Begin 
   {  
@@ -124,3 +124,4 @@ public class ISOFile
     $Target 
   } 
 }
+make 
