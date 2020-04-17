@@ -19,12 +19,12 @@
   and attempting to resolve all ambiguous file references.
 
 .EXAMPLE
-  create-iso -Source c:\Windows\Temp
+  .\new-iso.ps1 -Source c:\Windows\Temp
   This command creates a .iso file in $env:temp folder (default location) that contains c:\tools and c:\downloads\utils folders.
   The folders themselves are included at the root of the .iso image.  
 
 .EXAMPLE
-  dir c:\WinPE | New-IsoFile -Path c:\temp\WinPE.iso -BootFile "${env:ProgramFiles(x86)}\Windows Kits\10\Assessment and Deployment Kit\Deployment Tools\amd64\Oscdimg\efisys.bin" -Media DVDPLUSR -Title "WinPE" 
+  dir c:\WinPE | .\new-iso.ps1 -Path c:\temp\WinPE.iso -BootFile "${env:ProgramFiles(x86)}\Windows Kits\10\Assessment and Deployment Kit\Deployment Tools\amd64\Oscdimg\efisys.bin" -Media DVDPLUSR -Title "WinPE" 
   This command creates a bootable .iso file containing the content from c:\WinPE folder, but the folder itself isn't included. Boot file etfsboot.com can be found in Windows ADK. Refer to IMAPI_MEDIA_PHYSICAL_TYPE enumeration for possible media types: http://msdn.microsoft.com/en-us/library/windows/desktop/aa366217(v=vs.85).aspx
 
 .LINK
@@ -53,7 +53,7 @@
     [parameter(ParameterSetName='Clipboard')]
     [switch] $FromClipboard 
   ) 
-function create-iso  
+invoke-command -ScriptBlock 
 { 
   Begin 
   {  
@@ -124,4 +124,3 @@ public class ISOFile
     $Target 
   } 
 }
-create-iso
