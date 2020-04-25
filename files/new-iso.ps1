@@ -11,12 +11,15 @@
   in via the pipeline to be added to the iso file.
 
 .PARAMETER Path
-  The output file path that the iso file will be saved in. It is also
+  Optional. The output file path that the iso file will be saved in. It is also
   used for resolving any ambiguous file references, i.e. any file passed in
   via file name and not full path.
 
   If not specified the current working directory is used for the output file
   and attempting to resolve all ambiguous file references.
+
+.PARAMETER Name
+  Optional. The name of the file generated. If no name is provided the current timestamp will be substituted. 
 
 .EXAMPLE
   .\new-iso.ps1 -Source c:\Windows\Temp
@@ -35,15 +38,12 @@
   Param( 
     [Parameter(HelpMessage = "Items to include in iso file.", Position = 0, Mandatory = $true, ValueFromPipeline = $true, ParameterSetName = 'Source')]
     [ValidateNotNullOrEmpty()]
-    [Alias("S")]
     [string] $Source,
 
     [Parameter(HelpMessage = "Directory to put the file.", Position = 2, Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
-    [Alias("D")]
     [string] $Destination = $(Get-Location),
 
     [Parameter(HelpMessage = "Name of resulting file.", Position = 1, Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
-    [Alias("T")]
     [string] $Name = $(Get-Date).ToString("yyyyMMdd-HHmmss.ffff") + ".iso",
 
     [ValidateScript({Test-Path -LiteralPath $_ -PathType Leaf})][string]$BootFile = $null, 
