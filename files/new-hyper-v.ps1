@@ -77,10 +77,10 @@
     [string] $Memory = 2GB,
 
     [Parameter(HelpMessage = "Virtual Machine Location", Position = 2, Mandatory = $false, ValueFromPipeline = $false)] 
-    [string] $Path = (Join-Path -Path $env:USERPROFILE -Childpath "documents\hyper-v"),
+    [string] $Path = (Join-Path -Path $env:USERPROFILE -Childpath "documents\hyper-v\$Title"),
 
     [Parameter(HelpMessage = "Virtual Disk Location", Position = 3, Mandatory = $false, ValueFromPipeline = $false)] 
-    [string] $Disk = (Join-Path -Path $env:USERPROFILE -Childpath ("documents\hyper-v\$Title.vhdx")),
+    [string] $Disk = (Join-Path -Path $env:USERPROFILE -Childpath ("documents\hyper-v\$Title\$Title.vhdx")),
 
     [Parameter(HelpMessage = "Virtual Disk Size", Position = 4, Mandatory = $false, ValueFromPipeline = $false)] 
     [Alias("Storage")]
@@ -129,7 +129,7 @@
         Write-Error "Please run as shell as admin"
       }
     }
-    Catch
+    Catch 
     {
       Write-Error "Unknown error"
     }
