@@ -100,6 +100,7 @@
 
   Begin 
   {
+    # Check if shell is run as admin
     $TestRunAsAdmin = [bool](([System.Security.Principal.WindowsIdentity]::GetCurrent()).groups -match "S-1-5-32-544")
   }
 
@@ -109,13 +110,17 @@
     {
       If ($TestRunAsAdmin)
       {
-          Write-Verbose "Create $Title virtual machine with $Memory of memory and $Size of storage"
-          # Create virtual machine
-          New-VM -Name $Title -MemoryStartupBytes $Memory -Path $Path -NewVHDPath $Disk -NewVHDSizeBytes $Size -SwitchName $Switch -Notes $Note
+        Write-Verbose "Create $Title virtual machine with $Memory of memory and $Size of storage"
+        # Create virtual machine
+        New-VM -Name $Title -MemoryStartupBytes $Memory -Path $Path -NewVHDPath $Disk -NewVHDSizeBytes $Size -Notes $Note
+                
+        Write-Verbose "Start $Title virtual machine"
+        If ($ISO)
+        {
           # Add ISO image to boot from
           Write-Verbose "Add $ISO file"
           Add-VMDvdDrive -VMName $Title -Path $ISO
-          Write-Verbose "Start $Title virtual machine"
+        }
       }
       else
       {
