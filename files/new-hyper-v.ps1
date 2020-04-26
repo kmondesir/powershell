@@ -81,7 +81,7 @@
     [string] $Path = (Join-Path -Path $env:USERPROFILE -Childpath "documents\hyper-v\$Title"),
 
     [Parameter(HelpMessage = "Virtual Disk Location", Position = 3, Mandatory = $false, ValueFromPipeline = $false)] 
-    [string] $Disk = (Join-Path -Path $env:USERPROFILE -Childpath ("documents\hyper-v\$Title\$Title.vhdx")),
+    [string] $Disk = (Join-Path -Path $env:USERPROFILE -Childpath "documents\hyper-v\$Title\$Title.vhdx"),
 
     [Parameter(HelpMessage = "Virtual Disk Size", Position = 4, Mandatory = $false, ValueFromPipeline = $false)] 
     [Alias("Storage")]
