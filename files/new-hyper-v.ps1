@@ -70,11 +70,12 @@
   Param
   ( 
     [Parameter(HelpMessage = "Name of the virtual machine", Position = 0, Mandatory = $false, ValueFromPipeline = $false)]
-    [string] $Title = $(Get-Date).ToString("yyyyMMdd-HHmmss.ffff"),
+    [Alias("Names")]
+    [string[]] $Title = $(Get-Date).ToString("yyyyMMdd-HHmmss.ffff"),
 
     [Parameter(HelpMessage = "Memory Startup Bytes", Position = 1, Mandatory = $false, ValueFromPipeline = $false)]
     [Alias("RAM")]
-    [string] $Memory = 2GB,
+    [string] $Memory = 2048MB,
 
     [Parameter(HelpMessage = "Virtual Machine Location", Position = 2, Mandatory = $false, ValueFromPipeline = $false)] 
     [string] $Path = (Join-Path -Path $env:USERPROFILE -Childpath "documents\hyper-v\$Title"),
@@ -102,6 +103,7 @@
   {
     # Check if shell is run as admin
     $TestRunAsAdmin = [bool](([System.Security.Principal.WindowsIdentity]::GetCurrent()).groups -match "S-1-5-32-544")
+    $vmExists = [bool](get-vm -name $title -ErrorAction SilentlyContinue)
   }
 
   Process
@@ -110,17 +112,35 @@
     {
       If ($TestRunAsAdmin)
       {
-        Write-Verbose "Create $Title virtual machine with $Memory of memory and $Size of storage"
-        # Create virtual machine
-        New-VM -Name $Title -MemoryStartupBytes $Memory -Path $Path -NewVHDPath $Disk -NewVHDSizeBytes $Size -Notes $Note
-                
-        Write-Verbose "Start $Title virtual machine"
-        If ($ISO)
+        If ($vmExists)
         {
-          # Add ISO image to boot from
-          Write-Verbose "Add $ISO file"
-          Add-VMDvdDrive -VMName $Title -Path $ISO
+          # Checks if VM is already created
+          Write-Error "VM already exists. Please use another name"
         }
+        Else
+        {
+          # Create virtual machine
+          Write-Verbose "Create $Title virtual machine with $Memory of memory and $Size of storage"
+
+          Foreach ($name in $names)
+          {
+            New-VM -Name $name -MemoryStartupBytes $Memory -Path $Path -NewVHDPath $Disk -NewVHDSizeBytes $Size 
+                  
+            Write-Verbose "Start $Title virtual machine"
+            If ($ISO) 
+            {
+              # Add ISO image to boot from
+              Write-Verbose "Add $ISO file"
+              Add-VMDvdDrive -VMName $name -Path $ISO
+            }
+            Elseif ($Note) 
+            {
+              # Add Notes to VM
+              Write-Verbose "Add Note"
+              Set-VM -Name $name -Notes $Note
+            }
+          }
+        } 
       }
       else
       {
