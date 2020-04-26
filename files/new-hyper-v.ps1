@@ -70,8 +70,8 @@
   Param
   ( 
     [Parameter(HelpMessage = "Name of the virtual machine", Position = 0, Mandatory = $false, ValueFromPipeline = $false)]
-    [Alias("Names")]
-    [string[]] $Title = $(Get-Date).ToString("yyyyMMdd-HHmmss.ffff"),
+    [Alias("Name")]
+    [string] $Title = $(Get-Date).ToString("yyyyMMdd-HHmmss.ffff"),
 
     [Parameter(HelpMessage = "Memory Startup Bytes", Position = 1, Mandatory = $false, ValueFromPipeline = $false)]
     [Alias("RAM")]
@@ -96,7 +96,7 @@
 
     [Parameter(HelpMessage = "General information about the virtual machine", Position = 7, Mandatory = $false, ValueFromPipeline = $false)] 
     [Alias("Memo")]
-    [string] $Note = "$Title created with `n memory:$memory `n storage:$size"
+    [string] $Note
   )
 
   Begin 
@@ -104,6 +104,10 @@
     # Check if shell is run as admin
     $TestRunAsAdmin = [bool](([System.Security.Principal.WindowsIdentity]::GetCurrent()).groups -match "S-1-5-32-544")
     $vmExists = [bool](get-vm -name $title -ErrorAction SilentlyContinue)
+    function Get-Timestamp 
+    {
+      return $(Get-Date).ToString("yyyy-MM-dd-HH:mm:ss.ffff")
+    }
   }
 
   Process
@@ -115,30 +119,24 @@
         If ($vmExists)
         {
           # Checks if VM is already created
-          Write-Error "VM already exists. Please use another name"
+          Write-Error "$(Get-Timestamp):VM already exists. Please use another name"
         }
         Else
         {
           # Create virtual machine
-          Write-Verbose "Create $Title virtual machine with $Memory of memory and $Size of storage"
-
-          Foreach ($name in $names)
+          Write-Verbose "$(Get-Timestamp):Create virtual machine:$Title with $Memory of memory and $Size of storage"
+          New-VM -Name $Title -MemoryStartupBytes $Memory -Path $Path -NewVHDPath $Disk -NewVHDSizeBytes $Size 
+          If ($ISO) 
           {
-            New-VM -Name $name -MemoryStartupBytes $Memory -Path $Path -NewVHDPath $Disk -NewVHDSizeBytes $Size 
-                  
-            Write-Verbose "Start $Title virtual machine"
-            If ($ISO) 
-            {
-              # Add ISO image to boot from
-              Write-Verbose "Add $ISO file"
-              Add-VMDvdDrive -VMName $name -Path $ISO
-            }
-            Elseif ($Note) 
-            {
-              # Add Notes to VM
-              Write-Verbose "Add Note"
-              Set-VM -Name $name -Notes $Note
-            }
+            # Add ISO image to boot from
+            Write-Verbose "$(Get-Timestamp):Add ISO:$ISO"
+            Add-VMDvdDrive -VMName $Title -Path $ISO
+          }
+          Elseif ($Note) 
+          {
+            # Add Notes to VM
+            Write-Verbose "$(Get-Timestamp):Add Note:$Note"
+            Set-VM -Name $Title -Notes $Note
           }
         } 
       }
@@ -146,12 +144,12 @@
       {
         # Hyper V Manager is not enabled
         # Path is not accessible
-        Write-Error "Please run as shell as admin"
+        Write-Error "$(Get-Timestamp):Please run as shell as admin"
       }
     }
     Catch 
     {
-      Write-Error "Unknown error"
+      Write-Error "$(Get-Timestamp):Unknown error"
     }
   }
 
