@@ -104,6 +104,8 @@
     # Check if shell is run as admin
     $TestRunAsAdmin = [bool](([System.Security.Principal.WindowsIdentity]::GetCurrent()).groups -match "S-1-5-32-544")
     $vmExists = [bool](get-vm -name $title -ErrorAction SilentlyContinue)
+    $isHyperVEnabled = [bool](Get-WindowsOptionalFeature -FeatureName Microsoft-Hyper-V-All -Online)
+
     function Get-Timestamp 
     {
       return $(Get-Date).ToString("yyyy-MM-dd-HH:mm:ss.ffff")
@@ -116,7 +118,12 @@
     {
       If ($TestRunAsAdmin)
       {
-        If ($vmExists)
+        If (!$isHyperVEnabled)
+        {
+          # Checks if Hyper-V manager is enabled
+          Write-Error "$(Get-Timestamp):Hyper-V manager is NOT enabled."
+        }
+        elseif ($vmExists) 
         {
           # Checks if VM is already created
           Write-Error "$(Get-Timestamp):VM already exists. Please use another name"
