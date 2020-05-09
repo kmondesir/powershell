@@ -66,36 +66,38 @@
   Author: Kino Mondesir
 #>
 
-[CmdletBinding()]
+[CmdletBinding(SupportsShouldProcess = $True)]
   Param
   ( 
-    [Parameter(HelpMessage = "Name of the virtual machine", Position = 0, Mandatory = $false, ValueFromPipeline = $false)]
+    [Parameter(HelpMessage = "Name of the virtual machine", Position = 0, Mandatory = $false, ValueFromPipelineByPropertyName = $false)]
     [Alias("Name")]
     [string] $Title = $(Get-Date).ToString("yyyyMMdd-HHmmss.ffff"),
 
-    [Parameter(HelpMessage = "Memory Startup Bytes", Position = 1, Mandatory = $false, ValueFromPipeline = $false)]
+    [Parameter(HelpMessage = "Memory Startup Bytes", Position = 1, Mandatory = $false, ValueFromPipelineByPropertyName = $false)]
     [Alias("RAM")]
     [string] $Memory = 2048MB,
 
-    [Parameter(HelpMessage = "Virtual Machine Location", Position = 2, Mandatory = $false, ValueFromPipeline = $false)] 
+    [Parameter(HelpMessage = "Virtual Machine Location", Position = 2, Mandatory = $false, ValueFromPipelineByPropertyName = $false)] 
     [string] $Path = (Join-Path -Path $env:USERPROFILE -Childpath "documents\hyper-v\$Title"),
 
-    [Parameter(HelpMessage = "Virtual Disk Location", Position = 3, Mandatory = $false, ValueFromPipeline = $false)] 
+    [Parameter(HelpMessage = "Virtual Disk Location", Position = 3, Mandatory = $false, ValueFromPipelineByPropertyName = $false)] 
     [string] $Disk = (Join-Path -Path $env:USERPROFILE -Childpath "documents\hyper-v\$Title\$Title.vhdx"),
 
-    [Parameter(HelpMessage = "Virtual Disk Size", Position = 4, Mandatory = $false, ValueFromPipeline = $false)] 
+    [Parameter(HelpMessage = "Virtual Disk Size", Position = 4, Mandatory = $false, ValueFromPipelineByPropertyName = $false)] 
     [Alias("Storage")]
     [string] $Size = 20GB,
 
-    [Parameter(HelpMessage = "Network Switch", Position = 5, Mandatory = $false, ValueFromPipeline = $false)]
+    [Parameter(HelpMessage = "Network Switch", Position = 5, Mandatory = $false, ValueFromPipelineByPropertyName = $false)]
     [string] $Switch = "Bridged Virtual Switch",
 
-    [Parameter(HelpMessage = "ISO File", Position = 6, Mandatory = $false, ValueFromPipeline = $false)]
+    [Parameter(HelpMessage = "ISO File", Position = 6, Mandatory = $false, ValueFromPipelineByPropertyName = $false)]
     [Alias("Image")]
+    [ValidateNotNullOrEmpty()]
     [string] $ISO,
 
-    [Parameter(HelpMessage = "General information about the virtual machine", Position = 7, Mandatory = $false, ValueFromPipeline = $false)] 
+    [Parameter(HelpMessage = "General information about the virtual machine", Position = 7, Mandatory = $false, ValueFromPipelineByPropertyName = $false)] 
     [Alias("Memo")]
+    [ValidateNotNullOrEmpty()]
     [string] $Note
   )
 
@@ -105,15 +107,22 @@
     $TestRunAsAdmin = [bool](([System.Security.Principal.WindowsIdentity]::GetCurrent()).groups -match "S-1-5-32-544")
     $vmExists = [bool](get-vm -name $title -ErrorAction SilentlyContinue)
     $isHyperVEnabled = [bool](Get-WindowsOptionalFeature -FeatureName Microsoft-Hyper-V-All -Online)
+    $Path = Get-Location 
 
     function Get-Timestamp 
     {
       return $(Get-Date).ToString("yyyy-MM-dd-HH:mm:ss.ffff")
     }
+
+    function Message ([string]$statement)
+    {
+      return Get-Date -Format "Dyyyy-MM-ddTHH:mm:ss" + "::" + $statement
+    }
   }
 
   Process
   {
+    Start-Transcript -Path $Path -Append
     Try
     {
       If ($TestRunAsAdmin)
@@ -121,28 +130,28 @@
         If (!$isHyperVEnabled)
         {
           # Checks if Hyper-V manager is enabled
-          Write-Error "$(Get-Timestamp):Hyper-V manager is NOT enabled."
+          Write-Error Message("Hyper-V manager is NOT enabled.")
         }
         elseif ($vmExists) 
         {
           # Checks if VM is already created
-          Write-Error "$(Get-Timestamp):VM already exists. Please use another name"
+          Write-Error Message("VM already exists. Please use another name.")
         }
         Else
         {
           # Create virtual machine
-          Write-Verbose "$(Get-Timestamp):Create virtual machine:$Title with $Memory of memory and $Size of storage"
+          Write-Verbose Message("Create virtual machine:$Title with $Memory of memory and $Size of storage")
           New-VM -Name $Title -MemoryStartupBytes $Memory -Path $Path -NewVHDPath $Disk -NewVHDSizeBytes $Size 
           If ($ISO) 
           {
             # Add ISO image to boot from
-            Write-Verbose "$(Get-Timestamp):Add ISO:$ISO"
+            Write-Verbose Message("Add ISO:$ISO")
             Add-VMDvdDrive -VMName $Title -Path $ISO
           }
           Elseif ($Note) 
           {
             # Add Notes to VM
-            Write-Verbose "$(Get-Timestamp):Add Note:$Note"
+            Write-Verbose Message("Add Note:$Note")
             Set-VM -Name $Title -Notes $Note
           }
         } 
@@ -151,17 +160,22 @@
       {
         # Hyper V Manager is not enabled
         # Path is not accessible
-        Write-Error "$(Get-Timestamp):Please run as shell as admin"
+        Write-Error Message("Unknown")
+        return 20
+        Exit
       }
     }
     Catch 
     {
-      Write-Error "$(Get-Timestamp):Unknown error"
+      Write-Error Message("Unknown")
+      return 1
+      Exit
     }
   }
 
   End
   {
-    # Clean up task
+    Stop-Transcript
+    return 0
     Exit
   }
