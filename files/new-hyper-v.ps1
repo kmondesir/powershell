@@ -171,11 +171,14 @@
       return 1
       Exit
     }
+    Finally
+    {
+      Stop-Transcript
+    }
   }
 
   End
   {
-    Stop-Transcript
     return 0
     Exit
   }
