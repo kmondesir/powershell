@@ -21,6 +21,9 @@
 .PARAMETER Name
   Optional. The name of the file generated. If no name is provided the current timestamp will be substituted. 
 
+.PARAMETER Clipboard
+  Optional. Boolean variable that using a different parameter set.
+
 .EXAMPLE
   .\new-iso.ps1 -Source c:\Windows\Temp
   This command creates a .iso file in $env:temp folder (default location) that contains c:\tools and c:\downloads\utils folders.
@@ -34,16 +37,16 @@
   https://gallery.technet.microsoft.com/scriptcenter/New-ISOFile-function-a8deeffd 
 #>
 
-[CmdletBinding()]
+[CmdletBinding(DefaultParameterSetName = 'Source')]
   Param( 
     [Parameter(HelpMessage = "Items to include in iso file.", Position = 0, Mandatory = $true, ValueFromPipeline = $true, ParameterSetName = 'Source')]
     [ValidateNotNullOrEmpty()]
     [string] $Source,
 
-    [Parameter(HelpMessage = "Directory to put the file.", Position = 2, Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
+    [Parameter(HelpMessage = "Directory to put the file.", Position = 2, Mandatory = $false, ValueFromPipelineByPropertyName = $true, ParameterSetName = 'Source')]
     [string] $Destination = $(Get-Location),
 
-    [Parameter(HelpMessage = "Name of resulting file.", Position = 1, Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
+    [Parameter(HelpMessage = "Name of resulting file.", Position = 1, Mandatory = $false, ValueFromPipelineByPropertyName = $true, ParameterSetName = 'Source')]
     [string] $Name = $(Get-Date).ToString("yyyyMMdd-HHmmss.ffff") + ".iso",
 
     [ValidateScript({Test-Path -LiteralPath $_ -PathType Leaf})][string]$BootFile = $null, 
@@ -55,6 +58,7 @@
   ) 
 function make
 { 
+  Start-Transcript -Path (Get-Location)
   Begin 
   {  
     ($cp = new-object System.CodeDom.Compiler.CompilerParameters).CompilerOptions = '/unsafe' 
@@ -98,21 +102,39 @@ public class ISOFile
  
   Process 
   { 
-    if($FromClipboard) { 
-      if($PSVersionTable.PSVersion.Major -lt 5) { Write-Error -Message 'The -FromClipboard parameter is only supported on PowerShell v5 or higher'; break } 
-      $Source = Get-Clipboard -Format FileDropList 
-    } 
-
-    foreach ($item in Get-ChildItem -Path $Source) { 
-      if($item -isnot [System.IO.FileInfo] -and $item -isnot [System.IO.DirectoryInfo]) { 
-        $item = Get-Item -LiteralPath $item 
+    Try 
+    {
+      if($FromClipboard) 
+      { 
+        if($PSVersionTable.PSVersion.Major -lt 5) 
+        { 
+          Write-Error -Message 'The -FromClipboard parameter is only supported on PowerShell v5 or higher'; break 
+        } 
+        $Source = Get-Clipboard -Format FileDropList 
       } 
 
-      if($item) { 
-        Write-Verbose -Message "Adding item to the target image: $($item.FullName)" 
-        try { $Image.Root.AddTree($item.FullName, $true) } catch { Write-Error -Message ($_.Exception.Message.Trim() + ' Try a different media type.') } 
+      foreach ($item in Get-ChildItem -Path $Source) 
+      { 
+        if($item -isnot [System.IO.FileInfo] -and $item -isnot [System.IO.DirectoryInfo]) 
+        { $item = Get-Item -LiteralPath $item } 
+
+        if($item) 
+        { 
+          Write-Verbose -Message "Adding item to the target image: $($item.FullName)" 
+          try { $Image.Root.AddTree($item.FullName, $true) } 
+          catch { Write-Error -Message ($_.Exception.Message.Trim() + ' Try a different media type.') } 
+        } 
       } 
-    } 
+    }
+    Catch
+    {
+
+    }
+    Finally
+    {
+      Stop-Transcript 
+    }
+    
   } 
  
   End 
@@ -121,7 +143,9 @@ public class ISOFile
     $Result = $Image.CreateResultImage()  
     [ISOFile]::Create($Target.FullName,$Result.ImageStream,$Result.BlockSize,$Result.TotalBlocks) 
     Write-Verbose -Message "Target image ($($Target.FullName)) has been created" 
-    $Target 
+    $Target
+    return 0
+    Exit
   } 
 }
 make 
