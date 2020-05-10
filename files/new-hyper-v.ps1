@@ -92,12 +92,10 @@
 
     [Parameter(HelpMessage = "ISO File", Position = 6, Mandatory = $false, ValueFromPipelineByPropertyName = $false)]
     [Alias("Image")]
-    [ValidateNotNullOrEmpty()]
     [string] $ISO,
 
     [Parameter(HelpMessage = "General information about the virtual machine", Position = 7, Mandatory = $false, ValueFromPipelineByPropertyName = $false)] 
     [Alias("Memo")]
-    [ValidateNotNullOrEmpty()]
     [string] $Note
   )
 
