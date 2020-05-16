@@ -106,7 +106,7 @@
     $TestRunAsAdmin = [bool](([System.Security.Principal.WindowsIdentity]::GetCurrent()).groups -match "S-1-5-32-544")
     $vmExists = [bool](get-vm -name $title -ErrorAction SilentlyContinue)
     $isHyperVEnabled = [bool](Get-WindowsOptionalFeature -FeatureName Microsoft-Hyper-V-All -Online)
-    $Path = Get-Location 
+    $Path = Convert-Path -Path . 
 
     function Get-Timestamp 
     {
@@ -115,7 +115,7 @@
 
     function Msg ([string]$statement)
     {
-      $now = Invoke-Expression -Command "Get-Date -Format 'yyyy-mm-dd HH:mm:ss'"
+      $now = Get-Date -Format 'yyyy-mm-dd HH:mm:ss'
       return $now + "::" + $statement
     }
   }
@@ -161,7 +161,7 @@
         # Hyper V Manager is not enabled
         # Path is not accessible
         $exception = $_.Exception.Message
-        Write-Host (Msg "Unknown: $exception")
+        Write-Host (Msg "Please start script with Administrative Priviledges: $exception")
         return 20
         Exit
       }
