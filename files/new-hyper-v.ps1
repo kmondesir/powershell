@@ -114,7 +114,7 @@
 
     function Msg ([string]$statement)
     {
-      $now = Get-Date -Format 'yyyy-mm-dd HH:mm:ss'
+      $now = Invoke-Expression -Command "Get-Date -Format 'yyyy-mm-dd HH:mm:ss'"
       return $now + "::" + $statement
     }
   }
