@@ -61,7 +61,6 @@
   https://docs.microsoft.com/en-us/powershell/module/hyper-v/new-vm?view=win10-ps 
 
 .NOTES
-  Addition information about the script
   Version: 1.0
   Author: Kino Mondesir
 #>
@@ -77,11 +76,13 @@
     [Alias("RAM")]
     [string] $Memory = 2048MB,
 
-    [Parameter(HelpMsg = "Virtual Machine Location", Position = 2, Mandatory = $false, ValueFromPipelineByPropertyName = $false)] 
+    [Parameter(HelpMsg = "Virtual Machine Location", Position = 2, Mandatory = $false, ValueFromPipelineByPropertyName = $false)]
+    [ValidateScript({Test-Path -Path $_ -IsValid})] 
     [string] $Path = (Join-Path -Path $env:USERPROFILE -Childpath "documents\hyper-v\$Title"),
 
     [Parameter(HelpMsg = "Virtual Disk Location", Position = 3, Mandatory = $false, ValueFromPipelineByPropertyName = $false)] 
-    [string] $Disk = (Join-Path -Path $env:USERPROFILE -Childpath "documents\hyper-v\$Title\$Title.vhdx"),
+    [ValidateScript({Test-Path -Path $_ -IsValid})] 
+    [string] $Disk = (Join-Path -Path $Path -Childpath "$Title\$Title.vhdx"),
 
     [Parameter(HelpMsg = "Virtual Disk Size", Position = 4, Mandatory = $false, ValueFromPipelineByPropertyName = $false)] 
     [Alias("Storage")]
@@ -106,7 +107,6 @@
     $TestRunAsAdmin = [bool](([System.Security.Principal.WindowsIdentity]::GetCurrent()).groups -match "S-1-5-32-544")
     $vmExists = [bool](get-vm -name $title -ErrorAction SilentlyContinue)
     $isHyperVEnabled = [bool](Get-WindowsOptionalFeature -FeatureName Microsoft-Hyper-V-All -Online)
-    $Path = Convert-Path -Path . 
     function Get-Timestamp 
     {
       return $(Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
