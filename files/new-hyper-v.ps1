@@ -107,7 +107,6 @@
     $vmExists = [bool](get-vm -name $title -ErrorAction SilentlyContinue)
     $isHyperVEnabled = [bool](Get-WindowsOptionalFeature -FeatureName Microsoft-Hyper-V-All -Online)
     $Path = Convert-Path -Path . 
-
     function Get-Timestamp 
     {
       return $(Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
@@ -162,7 +161,7 @@
         # Path is not accessible
         $exception = $_.Exception.Message
         Write-Host (Msg "Please start script with Administrative Priviledges: $exception")
-        return 20
+        return $_.Exception.ID
         Exit
       }
     }
@@ -170,7 +169,7 @@
     {
       $exception = $_.Exception.Message
       Write-Error (Msg "Unknown: $exception")
-      return 1
+      return $_.Exception.ID
       Exit
     }
     Finally
