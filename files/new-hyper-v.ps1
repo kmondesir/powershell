@@ -97,7 +97,10 @@
 
     [Parameter(HelpMsg = "General information about the virtual machine", Position = 7, Mandatory = $false, ValueFromPipelineByPropertyName = $false)] 
     [Alias("Memo")]
-    [string] $Note
+    [string] $Note,
+
+    [Parameter(HelpMsg = "General information about the virtual machine", Position = 8, Mandatory = $false, ValueFromPipelineByPropertyName = $false)] 
+    [switch] $flag
   )
 
   Begin 
@@ -140,7 +143,8 @@
         {
           # Create virtual machine
           Write-Verbose -Message (Msg "Create virtual machine:$Title with $Memory of memory and $Size of storage")
-          New-VM -Name $Title -MemoryStartupBytes $Memory -Path $Path -NewVHDPath $Disk -NewVHDSizeBytes $Size 
+          $command = 'New-VM -Name $Title -MemoryStartupBytes $Memory -Path $Path -NewVHDPath $Disk -NewVHDSizeBytes $Size'
+          Invoke-Expression -Command $command
           If ($ISO) 
           {
             # Add ISO image to boot from
